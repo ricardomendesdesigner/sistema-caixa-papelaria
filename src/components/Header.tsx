@@ -13,7 +13,7 @@ export default async function Header() {
   const initials = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
-    <header style={{ 
+    <header className="mobile-header" style={{ 
       display: 'flex', 
       justifyContent: 'flex-end', 
       alignItems: 'center', 

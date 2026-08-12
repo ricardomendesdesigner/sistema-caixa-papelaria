@@ -3,20 +3,22 @@ import Link from "next/link";
 export default function Sidebar() {
   return (
     <aside className="sidebar">
-      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+      <div className="sidebar-header" style={{ marginBottom: '2rem', textAlign: 'center' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src="/logo.png" 
           alt="Papelaria Dani Rio" 
           style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '0.5rem' }} 
         />
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-color)' }}>
-          Papelaria Dani Rio
-        </h1>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Sistema de Gestão</p>
+        <div>
+          <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-color)' }}>
+            Papelaria Dani Rio
+          </h1>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Sistema de Gestão</p>
+        </div>
       </div>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+      <nav className="sidebar-nav" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
         <Link href="/" className="sidebar-link">
           📊 Dashboard
         </Link>
