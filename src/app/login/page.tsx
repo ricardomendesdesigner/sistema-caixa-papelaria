@@ -29,7 +29,13 @@ export default function Login() {
     }}>
       <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem', background: 'var(--bg-glass-hover)' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary-color)' }}>PDV Premium</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="/logo.png" 
+            alt="Papelaria Dani Rio" 
+            style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 1rem auto', display: 'block' }} 
+          />
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary-color)' }}>Papelaria Dani Rio</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Faça login para acessar o sistema</p>
         </div>
 

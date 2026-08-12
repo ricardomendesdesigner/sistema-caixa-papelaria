@@ -49,13 +49,10 @@ export default function Sidebar() {
         <Link href="/financeiro" className="sidebar-link">
           💰 Financeiro
         </Link>
-      </nav>
-
-      <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1rem' }}>
-        <Link href="/login" className="sidebar-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--danger-color)' }}>
+        <Link href="/login" className="sidebar-link sidebar-logout" style={{ color: 'var(--danger-color)' }}>
           🚪 Sair
         </Link>
-      </div>
+      </nav>
       
       <style>{`
         .sidebar-link {
