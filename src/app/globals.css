@@ -336,4 +336,30 @@ a:hover {
     padding-bottom: 1rem !important;
     margin-bottom: 1rem !important;
   }
+  .dashboard-tables {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.dashboard-tables {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.grid-3-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .mobile-flex-col {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .grid-3-col {
+    grid-template-columns: 1fr !important;
+  }
 }

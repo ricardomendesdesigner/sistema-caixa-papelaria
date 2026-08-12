@@ -85,7 +85,7 @@ export default function Financeiro() {
 
       {activeTab === 'CAIXA' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+          <div className="grid-3-col">
             <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
               <h3>Entradas</h3>
               <p style={{ fontSize: '2rem', color: '#10b981', fontWeight: 'bold' }}>R$ {totalIncome.toFixed(2)}</p>

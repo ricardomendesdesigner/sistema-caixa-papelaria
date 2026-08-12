@@ -44,7 +44,7 @@ export default function Dashboard() {
       </div>
 
       {/* Tabelas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginTop: '1rem' }}>
+      <div className="dashboard-tables">
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
           <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Últimas Vendas</h3>
           <div className="table-container">

@@ -285,7 +285,7 @@ export default function PDV() {
   }
 
   return (
-    <div className="flex gap-6" style={{ height: 'calc(100vh - 140px)' }}>
+    <div className="flex gap-6 mobile-flex-col" style={{ height: 'calc(100vh - 140px)' }}>
       {/* Coluna Esquerda: Itens da Venda */}
       <div className="glass-panel" style={{ flex: '2', display: 'flex', flexDirection: 'column', padding: '1.5rem', overflow: 'hidden' }}>
         <h2 style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
