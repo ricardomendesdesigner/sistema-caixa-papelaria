@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role            String   @default("CASHIER") // ADMIN, CASHIER, MANAGER
+  commissionRate  Float    @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  sales           Sale[]
+  transactions    Transaction[]
+  cashRegisters   CashRegister[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  barcode     String?     @unique
+  price       Float
+  cost        Float       @default(0)
+  stock       Int         @default(0)
+  minStock    Int         @default(0)
+  isActive    Boolean     @default(true)
+  imageUrl    String?
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  saleItems   SaleItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  cpf       String?  @unique
+  email     String?
+  phone     String?
+  isActive           Boolean  @default(true)
+  sales              Sale[]
+  accountReceivables AccountReceivable[]
+  createdAt          DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  cnpj      String?  @unique
+  email     String?
+  phone     String?
+  isActive        Boolean  @default(true)
+  accountPayables AccountPayable[]
+  createdAt       DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sale {
+  id         String     @id @default(cuid())
+  total      Float
+  status         String     @default("COMPLETED") // COMPLETED, CANCELLED
+  paymentMethod  String     @default("CASH") // CASH, CREDIT_CARD, DEBIT_CARD, PIX
+  commissionValue Float     @default(0)
+  userId         String
+  user           User       @relation(fields: [userId], references: [id])
+  customerId String?
+  customer   Customer?  @relation(fields: [customerId], references: [id])
+  items          SaleItem[]
+  receivables    AccountReceivable[]
+  cashRegisterId String?
+  cashRegister   CashRegister? @relation(fields: [cashRegisterId], references: [id])
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model SaleItem {
+  id        String   @id @default(cuid())
+  saleId    String
+  sale      Sale     @relation(fields: [saleId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  total     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AccountPayable {
+  id          String    @id @default(cuid())
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      String    @default("PENDING") // PENDING, PAID
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model AccountReceivable {
+  id          String    @id @default(cuid())
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      String    @default("PENDING") // PENDING, RECEIVED
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  saleId      String?
+  sale        Sale?     @relation(fields: [saleId], references: [id])
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Transaction {
+  id          String    @id @default(cuid())
+  description String
+  amount      Float
+  type        String    // INCOME, EXPENSE
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model CashRegister {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id])
+  openingBalance Float
+  closingBalance Float?
+  status         String         @default("OPEN") // OPEN, CLOSED
+  openedAt       DateTime       @default(now())
+  closedAt       DateTime?
+  movements      CashMovement[]
+  sales          Sale[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model CashMovement {
+  id             String       @id @default(cuid())
+  cashRegisterId String
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id])
+  type           String       // SANGRIA, SUPRIMENTO
+  amount         Float
+  description    String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
