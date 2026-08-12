@@ -20,7 +20,7 @@ export async function getReceivables() {
 }
 
 export async function receiveAccount(id: string) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: any) => {
     const acc = await tx.accountReceivable.update({
       where: { id },
       data: { status: 'RECEIVED' }
@@ -78,7 +78,7 @@ export async function savePayable(data: {
 }
 
 export async function payAccount(id: string) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: any) => {
     const acc = await tx.accountPayable.update({
       where: { id },
       data: { status: 'PAID' }

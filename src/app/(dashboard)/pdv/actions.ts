@@ -42,7 +42,7 @@ export async function checkoutSale(data: {
   total: number;
   paymentMethod: string;
 }) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: any) => {
     // 1. Verificar Caixa Aberto
     const openRegister = await tx.cashRegister.findFirst({
       where: { status: "OPEN" }

@@ -16,10 +16,10 @@ export async function getDashboardMetrics() {
     }
   });
 
-  const totalSales = sales.reduce((acc, s) => acc + s.total, 0);
+  const totalSales = sales.reduce((acc: number, s: any) => acc + s.total, 0);
   const salesCount = sales.length;
   const avgTicket = salesCount > 0 ? totalSales / salesCount : 0;
-  const uniqueCustomers = new Set(sales.map(s => s.customerId).filter(Boolean)).size;
+  const uniqueCustomers = new Set(sales.map((s: any) => s.customerId).filter(Boolean)).size;
 
   return {
     totalSales,
@@ -53,6 +53,6 @@ export async function getLowStockProducts() {
   });
 
   return products
-    .filter(p => p.stock <= p.minStock)
+    .filter((p: any) => p.stock <= p.minStock)
     .slice(0, 5);
 }

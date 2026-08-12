@@ -35,7 +35,7 @@ export async function getMonthlyCashFlow(year: number, month: number) {
   // Unificar tudo em um array cronológico
   const unifiedFlow: any[] = [];
 
-  transactions.forEach(t => {
+  transactions.forEach((t: any) => {
     unifiedFlow.push({
       id: t.id,
       date: t.createdAt,
@@ -46,7 +46,7 @@ export async function getMonthlyCashFlow(year: number, month: number) {
     });
   });
 
-  movements.forEach(m => {
+  movements.forEach((m: any) => {
     unifiedFlow.push({
       id: m.id,
       date: m.createdAt,
