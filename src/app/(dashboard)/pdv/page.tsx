@@ -97,9 +97,6 @@ export default function PDV() {
           }
           break;
         case 'F6':
-          alert('Função F6: Aguardar Venda (Em desenvolvimento)');
-          break;
-        case 'F7':
           openProductModal();
           break;
         case 'F12':
@@ -413,7 +410,7 @@ export default function PDV() {
                 setSelectedCustomer(null);
               }
             }}>F5 - Cancelar Venda</button>
-            <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={openProductModal}>F7 - Produtos</button>
+            <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={openProductModal}>F6 - Produtos</button>
           </div>
 
           <button 
