@@ -77,10 +77,14 @@ export default function PDV() {
         case 'F3':
           openCustomerModal();
           break;
-        case 'F4':
-          const val = prompt('Digite o valor do desconto (R$):', discount.toString());
-          if (val && !isNaN(Number(val))) setDiscount(Number(val));
+        case 'F4': {
+          let val = prompt('Digite o valor do desconto (R$):', discount.toString());
+          if (val) {
+            val = val.replace(',', '.');
+            if (!isNaN(Number(val))) setDiscount(Number(val));
+          }
           break;
+        }
         case 'F5':
           if (confirm('Tem certeza que deseja cancelar a venda atual e limpar todos os itens?')) {
             setCart([]);
@@ -240,6 +244,17 @@ export default function PDV() {
 
     yPos = (doc as any).lastAutoTable.finalY + 10;
     
+    const receiptSubtotal = completedSaleData.items.reduce((acc: number, item: any) => acc + item.total, 0);
+    const receiptDiscount = receiptSubtotal - completedSaleData.total;
+    
+    if (receiptDiscount > 0) {
+      doc.setFont("helvetica", "normal");
+      doc.text(`SUBTOTAL: R$ ${receiptSubtotal.toFixed(2)}`, 5, yPos);
+      yPos += 5;
+      doc.text(`DESCONTO: R$ ${receiptDiscount.toFixed(2)}`, 5, yPos);
+      yPos += 5;
+    }
+    
     doc.setFont("helvetica", "bold");
     doc.text(`TOTAL PAGO: R$ ${completedSaleData.total.toFixed(2)}`, 5, yPos);
     
@@ -372,8 +387,11 @@ export default function PDV() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={openCustomerModal}>F3 - Cliente</button>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={() => {
-              const val = prompt('Digite o valor do desconto (R$):', discount.toString());
-              if (val && !isNaN(Number(val))) setDiscount(Number(val));
+              let val = prompt('Digite o valor do desconto (R$):', discount.toString());
+              if (val) {
+                val = val.replace(',', '.');
+                if (!isNaN(Number(val))) setDiscount(Number(val));
+              }
             }}>F4 - Desconto</button>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={() => {
               if (confirm('Tem certeza que deseja cancelar a venda atual e limpar todos os itens?')) {
