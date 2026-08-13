@@ -29,7 +29,7 @@ export async function getCategories() {
 export async function saveProduct(data: {
   id?: string;
   name: string;
-  barcode: string;
+  barcode?: string;
   price: number;
   cost: number;
   stock: number;
@@ -38,14 +38,22 @@ export async function saveProduct(data: {
 }) {
   const { id, ...productData } = data;
   
+  let finalBarcode = productData.barcode;
+  if (!finalBarcode || finalBarcode.trim() === "") {
+    // Generate an internal barcode if none is provided
+    finalBarcode = `INT${Date.now().toString().slice(-8)}`;
+  } else {
+    finalBarcode = finalBarcode.trim();
+  }
+  
   if (id) {
     return await prisma.product.update({
       where: { id },
-      data: productData
+      data: { ...productData, barcode: finalBarcode }
     });
   } else {
     return await prisma.product.create({
-      data: productData
+      data: { ...productData, barcode: finalBarcode }
     });
   }
 }

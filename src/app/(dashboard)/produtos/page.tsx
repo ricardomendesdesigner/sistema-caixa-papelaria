@@ -80,8 +80,8 @@ export default function Produtos() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.barcode) {
-      alert("Nome e Código de Barras são obrigatórios.");
+    if (!formData.name) {
+      alert("Nome do produto é obrigatório.");
       return;
     }
     
@@ -207,8 +207,8 @@ export default function Produtos() {
                 <input type="text" className="input-field" placeholder="Ex: Cerveja Lata 350ml" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               </div>
               <div className="input-group">
-                <label className="input-label">Código de Barras</label>
-                <input type="text" className="input-field" placeholder="EAN-13" value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} disabled={!!formData.id} />
+                <label className="input-label">Código de Barras (Opcional)</label>
+                <input type="text" className="input-field" placeholder="Deixe em branco para gerar auto." value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} disabled={!!formData.id} />
               </div>
               <div className="input-group">
                 <label className="input-label">Preço de Venda (R$)</label>
