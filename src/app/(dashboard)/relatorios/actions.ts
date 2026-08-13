@@ -2,10 +2,16 @@
 
 import { prisma } from "@/lib/prisma"
 
-export async function getMonthlyCashFlow(year: number, month: number) {
-  // O mês no JS (0-11) ou 1-12. Assumiremos 1-12.
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+export async function getCashFlow(year: number, month: number, day?: number) {
+  let startDate, endDate;
+  
+  if (day) {
+    startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    endDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+  } else {
+    startDate = new Date(year, month - 1, 1);
+    endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  }
 
   // Buscar transações globais
   const transactions = await prisma.transaction.findMany({

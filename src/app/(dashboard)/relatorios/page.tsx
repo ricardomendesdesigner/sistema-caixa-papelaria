@@ -1,20 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getMonthlyCashFlow } from "./actions";
+import { getCashFlow } from "./actions";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 export default function RelatoriosPage() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
+  const [reportType, setReportType] = useState<"MONTH" | "DAY">("MONTH");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const loadReport = async () => {
     setLoading(true);
     try {
-      const result = await getMonthlyCashFlow(selectedYear, selectedMonth);
+      let result;
+      if (reportType === "MONTH") {
+        result = await getCashFlow(selectedYear, selectedMonth);
+      } else {
+        const [y, m, d] = selectedDate.split("-");
+        result = await getCashFlow(Number(y), Number(m), Number(d));
+      }
       setData(result);
     } catch (e) {
       console.error(e);
@@ -26,7 +34,7 @@ export default function RelatoriosPage() {
 
   useEffect(() => {
     loadReport();
-  }, [selectedMonth, selectedYear]);
+  }, [reportType, selectedMonth, selectedYear, selectedDate]);
 
   const imprimirPDF = async () => {
     if (!data) return;
@@ -45,10 +53,8 @@ export default function RelatoriosPage() {
           reader.readAsDataURL(blob);
         });
         
-        // Adicionar logo centralizada no topo da página A4
-        // Largura 24, Altura 24. A4 centro X = 105. Logo X = 105 - 12 = 93
         doc.addImage(base64Data, 'PNG', 93, 10, 24, 24);
-        yPos = 42; // Move title below the logo
+        yPos = 42; 
       }
     } catch (e) {
       console.error("Erro ao carregar logo:", e);
@@ -61,8 +67,20 @@ export default function RelatoriosPage() {
     yPos += 7;
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('pt-BR', { month: 'long' });
-    doc.text(`Fluxo de Caixa - ${monthName.toUpperCase()} / ${selectedYear}`, 105, yPos, { align: 'center' });
+    
+    let reportTitle = "";
+    let fileName = "";
+    if (reportType === "MONTH") {
+      const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('pt-BR', { month: 'long' });
+      reportTitle = `Fluxo de Caixa - ${monthName.toUpperCase()} / ${selectedYear}`;
+      fileName = `fluxo_de_caixa_${monthName}_${selectedYear}.pdf`;
+    } else {
+      const [y, m, d] = selectedDate.split("-");
+      reportTitle = `Fluxo de Caixa Diário - ${d}/${m}/${y}`;
+      fileName = `fluxo_de_caixa_${d}_${m}_${y}.pdf`;
+    }
+
+    doc.text(reportTitle, 105, yPos, { align: 'center' });
 
     // Resumo
     yPos += 15;
@@ -90,37 +108,53 @@ export default function RelatoriosPage() {
       head: [['Data/Hora', 'Origem', 'Descrição', 'Tipo', 'Valor']],
       body: tableBody,
       theme: 'grid',
-      headStyles: { fillColor: [236, 72, 153] }, // Cor Rosa (--primary-color)
+      headStyles: { fillColor: [236, 72, 153] },
       columnStyles: { 
         3: { halign: 'center' },
         4: { halign: 'right' }
       },
       didParseCell: function (data) {
         if (data.section === 'body' && data.column.index === 3) {
-          if (data.cell.raw === 'SAÍDA') data.cell.styles.textColor = [220, 38, 38]; // Red
-          if (data.cell.raw === 'ENTRADA') data.cell.styles.textColor = [22, 163, 74]; // Green
+          if (data.cell.raw === 'SAÍDA') data.cell.styles.textColor = [220, 38, 38]; 
+          if (data.cell.raw === 'ENTRADA') data.cell.styles.textColor = [22, 163, 74]; 
         }
       }
     });
 
-    doc.save(`fluxo_de_caixa_${monthName}_${selectedYear}.pdf`);
+    doc.save(fileName);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header mobile-flex-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
         <h1 className="page-title">Relatórios Financeiros</h1>
         
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <select className="input-field" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))}>
-            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-              <option key={m} value={m}>{new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()}</option>
-            ))}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select className="input-field" value={reportType} onChange={e => setReportType(e.target.value as any)}>
+            <option value="MONTH">Mensal</option>
+            <option value="DAY">Diário</option>
           </select>
-          <select className="input-field" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}>
-            <option value={2026}>2026</option>
-            <option value={2027}>2027</option>
-          </select>
+
+          {reportType === "MONTH" ? (
+            <>
+              <select className="input-field" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                  <option key={m} value={m}>{new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()}</option>
+                ))}
+              </select>
+              <select className="input-field" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}>
+                <option value={2026}>2026</option>
+                <option value={2027}>2027</option>
+              </select>
+            </>
+          ) : (
+            <input 
+              type="date" 
+              className="input-field" 
+              value={selectedDate} 
+              onChange={e => setSelectedDate(e.target.value)} 
+            />
+          )}
           
           <button className="btn btn-primary" onClick={imprimirPDF} disabled={!data || data.flow.length === 0}>
             🖨️ Imprimir PDF
