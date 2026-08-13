@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { searchProduct, getCustomers, checkoutSale, getMasterUser, getUsers, getAllProducts } from './actions';
+import { searchProducts, getCustomers, checkoutSale, getMasterUser, getUsers, getAllProducts } from './actions';
 import { getCurrentCashRegister } from '../caixa/actions';
 
 type CartItem = {
@@ -123,8 +123,11 @@ export default function PDV() {
 
   const handleBarcodeSubmit = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && barcode.trim() !== '') {
-      const product = await searchProduct(barcode.trim());
-      if (product) {
+      const query = barcode.trim();
+      const results = await searchProducts(query);
+      
+      if (results.length === 1) {
+        const product = results[0];
         const existing = cart.find(item => item.productId === product.id);
         if (existing) {
           setCart(cart.map(item => item.productId === product.id 
@@ -139,6 +142,14 @@ export default function PDV() {
             total: product.price,
             imageUrl: product.imageUrl
           }]);
+        }
+        setBarcode('');
+      } else if (results.length > 1) {
+        setProductSearch(query);
+        setProductModal(true);
+        if (allProducts.length === 0) {
+          const data = await getAllProducts();
+          setAllProducts(data);
         }
         setBarcode('');
       } else {

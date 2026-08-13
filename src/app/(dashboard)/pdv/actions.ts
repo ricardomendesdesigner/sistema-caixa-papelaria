@@ -2,17 +2,27 @@
 
 import { prisma } from "@/lib/prisma"
 
-export async function searchProduct(query: string) {
-  const product = await prisma.product.findFirst({
+export async function searchProducts(query: string) {
+  // First try exact barcode match
+  const exactMatch = await prisma.product.findFirst({
+    where: { barcode: query, isActive: true }
+  });
+  if (exactMatch) {
+    return [exactMatch];
+  }
+
+  // Otherwise, search by name
+  const products = await prisma.product.findMany({
     where: {
       isActive: true,
       OR: [
-        { barcode: query },
+        { barcode: { contains: query, mode: 'insensitive' } },
         { name: { contains: query, mode: 'insensitive' } }
       ]
-    }
+    },
+    take: 50
   });
-  return product;
+  return products;
 }
 
 export async function getAllProducts() {
