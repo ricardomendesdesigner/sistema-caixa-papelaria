@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { getCurrentCashRegister, openCashRegister, closeCashRegister, addCashMovement } from "./actions";
 import { getUsers } from "../funcionarios/actions";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function CaixaPage() {
   const [caixa, setCaixa] = useState<any>(null);
@@ -107,10 +109,113 @@ export default function CaixaPage() {
 
   const { totalVendas, totalSangria, totalSuprimento, saldoEsperado } = calcTotals();
 
+  const imprimirMovimento = async () => {
+    if (!caixa) return;
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    let yPos = 15;
+
+    try {
+      const response = await fetch('/logo.png');
+      if (response.ok) {
+        const blob = await response.blob();
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(base64Data, 'PNG', 93, 10, 24, 24);
+        yPos = 42; 
+      }
+    } catch (e) {
+      console.error("Erro logo:", e);
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("PAPELARIA DANI RIO - MOVIMENTO DO CAIXA", 105, yPos, { align: 'center' });
+    
+    yPos += 7;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Operador: ${caixa.user?.name || '-'} | Abertura: ${new Date(caixa.createdAt).toLocaleString()}`, 105, yPos, { align: 'center' });
+
+    yPos += 15;
+    
+    // Resumo
+    doc.setFontSize(11);
+    doc.text(`Fundo de Caixa Inicial: R$ ${caixa.openingBalance.toFixed(2)}`, 15, yPos);
+    yPos += 7;
+    doc.text(`Total em Vendas (Dinheiro): R$ ${totalVendas.toFixed(2)}`, 15, yPos);
+    yPos += 7;
+    doc.text(`Total Suprimentos: R$ ${totalSuprimento.toFixed(2)}`, 15, yPos);
+    yPos += 7;
+    doc.text(`Total Sangrias: R$ ${totalSangria.toFixed(2)}`, 15, yPos);
+    yPos += 7;
+    doc.setFont("helvetica", "bold");
+    doc.text(`SALDO ESPERADO EM DINHEIRO: R$ ${saldoEsperado.toFixed(2)}`, 15, yPos);
+
+    yPos += 12;
+
+    const flow: any[] = [];
+    
+    caixa.sales.filter((s: any) => s.paymentMethod === "CASH").forEach((s: any) => {
+      flow.push({
+        date: new Date(s.createdAt),
+        type: 'VENDA',
+        desc: `Venda #${s.id.slice(-6).toUpperCase()}`,
+        amount: s.total
+      });
+    });
+
+    caixa.movements.forEach((m: any) => {
+      flow.push({
+        date: new Date(m.createdAt),
+        type: m.type,
+        desc: m.description,
+        amount: m.amount
+      });
+    });
+
+    flow.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const tableBody = flow.map(f => [
+      f.date.toLocaleString(),
+      f.type,
+      f.desc,
+      `R$ ${f.amount.toFixed(2)}`
+    ]);
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Data/Hora', 'Tipo', 'Descrição', 'Valor']],
+      body: tableBody,
+      theme: 'grid',
+      headStyles: { fillColor: [236, 72, 153] },
+      columnStyles: { 
+        1: { halign: 'center' },
+        3: { halign: 'right' }
+      },
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          if (data.cell.raw === 'SANGRIA') data.cell.styles.textColor = [220, 38, 38]; 
+          if (data.cell.raw === 'SUPRIMENTO' || data.cell.raw === 'VENDA') data.cell.styles.textColor = [22, 163, 74]; 
+        }
+      }
+    });
+
+    doc.save(`movimento_caixa_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
         <h1 className="page-title">Controle de Caixa</h1>
+        {caixa && (
+          <button className="btn btn-primary" onClick={imprimirMovimento}>
+            🖨️ Imprimir Movimento do Dia
+          </button>
+        )}
       </div>
 
       {!caixa ? (
@@ -144,7 +249,7 @@ export default function CaixaPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <button className="btn btn-secondary" onClick={() => { setMoveType("SUPRIMENTO"); setShowMoveModal(true); }}>+ Suprimento (Entrada)</button>
             <button className="btn btn-secondary" onClick={() => { setMoveType("SANGRIA"); setShowMoveModal(true); }}>- Sangria (Retirada)</button>
             <button className="btn btn-danger" style={{ marginLeft: 'auto' }} onClick={() => setShowCloseModal(true)}>Fechar Caixa</button>
