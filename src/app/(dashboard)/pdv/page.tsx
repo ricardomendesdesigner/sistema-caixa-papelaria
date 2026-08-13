@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { searchProduct, getCustomers, checkoutSale, getMasterUser, getUsers } from './actions';
+import { searchProduct, getCustomers, checkoutSale, getMasterUser, getUsers, getAllProducts } from './actions';
 import { getCurrentCashRegister } from '../caixa/actions';
 
 type CartItem = {
@@ -41,6 +41,10 @@ export default function PDV() {
   
   const [completedSaleData, setCompletedSaleData] = useState<any>(null);
   const [customerPhone, setCustomerPhone] = useState("");
+
+  const [productModal, setProductModal] = useState(false);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [productSearch, setProductSearch] = useState('');
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,6 +99,9 @@ export default function PDV() {
         case 'F6':
           alert('Função F6: Aguardar Venda (Em desenvolvimento)');
           break;
+        case 'F7':
+          openProductModal();
+          break;
         case 'F12':
           if (cart.length > 0) setCheckoutModal(true);
           break;
@@ -109,6 +116,12 @@ export default function PDV() {
     setCustomerModal(true);
     const data = await getCustomers();
     setCustomers(data);
+  };
+
+  const openProductModal = async () => {
+    setProductModal(true);
+    const data = await getAllProducts();
+    setAllProducts(data);
   };
 
   const handleBarcodeSubmit = async (e: React.KeyboardEvent) => {
@@ -400,7 +413,7 @@ export default function PDV() {
                 setSelectedCustomer(null);
               }
             }}>F5 - Cancelar Venda</button>
-            <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={() => alert('Função Aguardar (Em dev)')}>F6 - Aguardar</button>
+            <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={openProductModal}>F7 - Produtos</button>
           </div>
 
           <button 
@@ -439,6 +452,61 @@ export default function PDV() {
                 setCustomerModal(false);
                 barcodeInputRef.current?.focus();
               }}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {productModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(5px)' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '600px', padding: '2rem', background: 'var(--bg-primary)' }}>
+            <h2 style={{ marginBottom: '1.5rem' }}>Consultar Produtos</h2>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Buscar por nome ou código..." 
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              style={{ width: '100%', marginBottom: '1rem' }}
+              autoFocus
+            />
+            <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.barcode && p.barcode.includes(productSearch))).length === 0 ? (
+                <p style={{ color: 'var(--text-muted)' }}>Nenhum produto encontrado.</p>
+              ) : (
+                allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.barcode && p.barcode.includes(productSearch))).map(p => (
+                  <button key={p.id} className="btn btn-secondary" style={{ justifyContent: 'space-between', padding: '1rem' }} onClick={() => {
+                    // Add to cart
+                    const existing = cart.find(item => item.productId === p.id);
+                    if (existing) {
+                      setCart(cart.map(item => item.productId === p.id 
+                        ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price } 
+                        : item));
+                    } else {
+                      setCart([...cart, { 
+                        productId: p.id, 
+                        name: p.name, 
+                        quantity: 1, 
+                        price: p.price, 
+                        total: p.price,
+                        imageUrl: p.imageUrl
+                      }]);
+                    }
+                    setProductModal(false);
+                    setProductSearch('');
+                    barcodeInputRef.current?.focus();
+                  }}>
+                    <span>{p.name}</span>
+                    <span style={{ fontWeight: 'bold' }}>R$ {p.price.toFixed(2)}</span>
+                  </button>
+                ))
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+              <button className="btn btn-secondary" onClick={() => {
+                setProductModal(false);
+                barcodeInputRef.current?.focus();
+              }}>Fechar</button>
             </div>
           </div>
         </div>

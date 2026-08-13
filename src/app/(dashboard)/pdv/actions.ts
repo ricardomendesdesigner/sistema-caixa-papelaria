@@ -15,6 +15,14 @@ export async function searchProduct(query: string) {
   return product;
 }
 
+export async function getAllProducts() {
+  return await prisma.product.findMany({
+    where: { isActive: true },
+    orderBy: { name: 'asc' },
+    take: 200
+  });
+}
+
 export async function getCustomers() {
   return await prisma.customer.findMany({
     orderBy: { name: 'asc' }
