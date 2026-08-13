@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
 
 export default function Sidebar() {
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.cookie = "auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    window.location.href = "/login";
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-header" style={{ marginBottom: '2rem', textAlign: 'center' }}>
@@ -49,9 +57,9 @@ export default function Sidebar() {
         <Link href="/financeiro" className="sidebar-link">
           💰 Financeiro
         </Link>
-        <Link href="/login" className="sidebar-link sidebar-logout" style={{ color: 'var(--danger-color)' }}>
+        <button onClick={handleLogout} className="sidebar-link sidebar-logout" style={{ color: 'var(--danger-color)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', width: '100%' }}>
           🚪 Sair
-        </Link>
+        </button>
       </nav>
       
       <style>{`
@@ -62,6 +70,7 @@ export default function Sidebar() {
           font-size: 0.9rem;
           color: var(--text-secondary);
           transition: all var(--transition-fast);
+          display: block;
         }
         .sidebar-link:hover {
           background: rgba(236, 72, 153, 0.1);
