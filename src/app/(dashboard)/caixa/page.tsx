@@ -229,6 +229,7 @@ export default function CaixaPage() {
           <button className="btn btn-primary" onClick={() => setShowOpenModal(true)}>Abrir Caixa Agora</button>
         </div>
       ) : (
+        <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <h3 style={{ marginTop: '0.5rem', marginBottom: '-0.5rem', color: 'var(--text-secondary)' }}>Resumo Geral das Vendas</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
@@ -312,7 +313,7 @@ export default function CaixaPage() {
               </table>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL ABERTURA */}
