@@ -45,6 +45,7 @@ export default function PDV() {
   const [productModal, setProductModal] = useState(false);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [productSearch, setProductSearch] = useState('');
+  const [pendingQuantity, setPendingQuantity] = useState(1);
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
@@ -123,7 +124,21 @@ export default function PDV() {
 
   const handleBarcodeSubmit = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && barcode.trim() !== '') {
-      const query = barcode.trim();
+      let query = barcode.trim();
+      let qtyToAdd = 1;
+
+      // Suporte para quantidade: ex "5*12345" ou "3*caderno"
+      const starIndex = query.indexOf('*');
+      if (starIndex > 0) {
+        const potentialQty = parseInt(query.substring(0, starIndex), 10);
+        if (!isNaN(potentialQty) && potentialQty > 0) {
+          qtyToAdd = potentialQty;
+          query = query.substring(starIndex + 1).trim();
+        }
+      }
+
+      if (query === '') return;
+
       const results = await searchProducts(query);
       
       if (results.length === 1) {
@@ -131,20 +146,21 @@ export default function PDV() {
         const existing = cart.find(item => item.productId === product.id);
         if (existing) {
           setCart(cart.map(item => item.productId === product.id 
-            ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price } 
+            ? { ...item, quantity: item.quantity + qtyToAdd, total: (item.quantity + qtyToAdd) * item.price } 
             : item));
         } else {
           setCart([...cart, { 
             productId: product.id, 
             name: product.name, 
-            quantity: 1, 
+            quantity: qtyToAdd, 
             price: product.price, 
-            total: product.price,
+            total: product.price * qtyToAdd,
             imageUrl: product.imageUrl
           }]);
         }
         setBarcode('');
       } else if (results.length > 1) {
+        setPendingQuantity(qtyToAdd);
         setProductSearch(query);
         setProductModal(true);
         if (allProducts.length === 0) {
@@ -155,6 +171,18 @@ export default function PDV() {
       } else {
         alert('Produto não encontrado!');
       }
+    }
+  };
+
+  const updateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      if (confirm('Deseja remover este item da venda?')) {
+        setCart(cart.filter(item => item.productId !== productId));
+      }
+    } else {
+      setCart(cart.map(item => item.productId === productId 
+        ? { ...item, quantity: newQuantity, total: newQuantity * item.price } 
+        : item));
     }
   };
 
@@ -383,7 +411,13 @@ export default function PDV() {
                       )}
                     </td>
                     <td>{item.name}</td>
-                    <td>{item.quantity}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.25rem', borderRadius: '8px', width: 'fit-content' }}>
+                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', minWidth: '30px' }} onClick={() => updateQuantity(item.productId, item.quantity - 1)}>-</button>
+                        <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</span>
+                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', minWidth: '30px' }} onClick={() => updateQuantity(item.productId, item.quantity + 1)}>+</button>
+                      </div>
+                    </td>
                     <td>R$ {item.price.toFixed(2)}</td>
                     <td>R$ {item.total.toFixed(2)}</td>
                   </tr>
@@ -488,20 +522,21 @@ export default function PDV() {
                     const existing = cart.find(item => item.productId === p.id);
                     if (existing) {
                       setCart(cart.map(item => item.productId === p.id 
-                        ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price } 
+                        ? { ...item, quantity: item.quantity + pendingQuantity, total: (item.quantity + pendingQuantity) * item.price } 
                         : item));
                     } else {
                       setCart([...cart, { 
                         productId: p.id, 
                         name: p.name, 
-                        quantity: 1, 
+                        quantity: pendingQuantity, 
                         price: p.price, 
-                        total: p.price,
+                        total: p.price * pendingQuantity,
                         imageUrl: p.imageUrl
                       }]);
                     }
                     setProductModal(false);
                     setProductSearch('');
+                    setPendingQuantity(1);
                     barcodeInputRef.current?.focus();
                   }}>
                     <span>{p.name}</span>
