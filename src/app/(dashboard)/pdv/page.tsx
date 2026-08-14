@@ -37,6 +37,7 @@ export default function PDV() {
   const [checkoutModal, setCheckoutModal] = useState(false);
   const [receiptModal, setReceiptModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('CASH'); // CASH, PIX, CREDIT_CARD
+  const [amountReceived, setAmountReceived] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   
   const [completedSaleData, setCompletedSaleData] = useState<any>(null);
@@ -204,6 +205,7 @@ export default function PDV() {
         items: cart,
         total: finalTotal,
         paymentMethod,
+        amountReceived: Number(amountReceived.replace(',', '.')),
         customer: selectedCustomer
       });
       setCustomerPhone(selectedCustomer?.phone || "");
@@ -226,6 +228,7 @@ export default function PDV() {
     setSelectedCustomer(null);
     setReceiptModal(false);
     setCompletedSaleData(null);
+    setAmountReceived('');
     setTimeout(() => barcodeInputRef.current?.focus(), 100);
   };
 
@@ -574,7 +577,10 @@ export default function PDV() {
 
             <div className="input-group">
               <label className="input-label">Forma de Pagamento</label>
-              <select className="input-field" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+              <select className="input-field" value={paymentMethod} onChange={(e) => {
+                setPaymentMethod(e.target.value);
+                setAmountReceived('');
+              }}>
                 <option value="CASH">Dinheiro</option>
                 <option value="PIX">PIX</option>
                 <option value="CREDIT_CARD">Cartão de Crédito</option>
@@ -582,6 +588,29 @@ export default function PDV() {
                 <option value="A_PRAZO">A Prazo (Fiado)</option>
               </select>
             </div>
+
+            {paymentMethod === 'CASH' && (
+              <>
+                <div className="input-group">
+                  <label className="input-label">Valor Recebido (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    className="input-field" 
+                    placeholder="Ex: 50.00" 
+                    value={amountReceived}
+                    onChange={e => setAmountReceived(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                {Number(amountReceived.replace(',', '.')) > finalTotal && (
+                  <div style={{ padding: '1rem', background: 'var(--success-color)', color: 'white', borderRadius: '8px', textAlign: 'center', marginBottom: '1rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.9 }}>Troco a devolver:</p>
+                    <h2 style={{ margin: 0, fontSize: '2.5rem' }}>R$ {(Number(amountReceived.replace(',', '.')) - finalTotal).toFixed(2)}</h2>
+                  </div>
+                )}
+              </>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
               <button className="btn btn-secondary" onClick={() => {
@@ -605,6 +634,15 @@ export default function PDV() {
             </div>
             <h2 style={{ marginBottom: '0.5rem' }}>Venda Finalizada!</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>O caixa foi atualizado com sucesso.</p>
+
+            {completedSaleData?.paymentMethod === 'CASH' && completedSaleData?.amountReceived > completedSaleData?.total && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <p style={{ color: '#166534', margin: 0, fontWeight: 'bold' }}>Troco a Devolver</p>
+                <h1 style={{ color: '#15803d', margin: '0.5rem 0 0 0', fontSize: '3rem' }}>
+                  R$ {(completedSaleData.amountReceived - completedSaleData.total).toFixed(2)}
+                </h1>
+              </div>
+            )}
 
             <div className="input-group" style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
               <label className="input-label">WhatsApp do Cliente (DDD + Número)</label>
