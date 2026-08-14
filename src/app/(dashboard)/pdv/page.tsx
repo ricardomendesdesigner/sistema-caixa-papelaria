@@ -102,6 +102,24 @@ export default function PDV() {
         case 'F6':
           openProductModal();
           break;
+        case 'F7': {
+          let val = prompt('Digite o valor a ser adicionado (R$):');
+          if (val) {
+            val = val.replace(',', '.').replace(/[^0-9.-]+/g, "");
+            const parsed = parseFloat(val);
+            if (!isNaN(parsed) && parsed > 0) {
+              setCart(prev => [...prev, {
+                productId: "AVULSO",
+                name: 'Produto Avulso',
+                quantity: 1,
+                price: parsed,
+                total: parsed,
+                imageUrl: null
+              }]);
+            }
+          }
+          break;
+        }
         case 'F12':
           if (cart.length > 0) setCheckoutModal(true);
           break;
@@ -441,9 +459,9 @@ export default function PDV() {
         </div>
 
         <div className="glass-panel" style={{ padding: '1.5rem', flex: 1, position: 'relative' }}>
-          <h3 style={{ marginBottom: '1.5rem' }}>Ações Rápidas</h3>
+          <h3 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>Ações Rápidas</h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={openCustomerModal}>F3 - Cliente</button>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={() => {
               let val = prompt('Digite o valor do desconto (R$):', discount.toString());
@@ -461,6 +479,23 @@ export default function PDV() {
               }
             }}>F5 - Cancelar Venda</button>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={openProductModal}>F6 - Produtos</button>
+            <button className="btn btn-secondary" style={{ padding: '1rem', background: 'var(--success-color)', color: 'white', border: 'none' }} onClick={() => {
+              let val = prompt('Digite o valor a ser adicionado (R$):');
+              if (val) {
+                val = val.replace(',', '.').replace(/[^0-9.-]+/g, "");
+                const parsed = parseFloat(val);
+                if (!isNaN(parsed) && parsed > 0) {
+                  setCart(prev => [...prev, {
+                    productId: "AVULSO",
+                    name: 'Produto Avulso',
+                    quantity: 1,
+                    price: parsed,
+                    total: parsed,
+                    imageUrl: null
+                  }]);
+                }
+              }
+            }}>F7 - Valor Avulso</button>
           </div>
 
           <button 

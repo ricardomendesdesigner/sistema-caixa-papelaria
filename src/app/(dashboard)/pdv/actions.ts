@@ -79,6 +79,18 @@ export async function checkoutSale(data: {
       ? data.total * (seller.commissionRate / 100) 
       : 0;
 
+    let avulsoProductId: string | null = null;
+    const hasAvulso = data.items.some(i => i.productId === "AVULSO");
+    if (hasAvulso) {
+      let avulsoProd = await tx.product.findFirst({ where: { barcode: "AVULSO" } });
+      if (!avulsoProd) {
+        avulsoProd = await tx.product.create({
+          data: { name: "Produto Avulso", barcode: "AVULSO", price: 0, cost: 0, stock: 0 }
+        });
+      }
+      avulsoProductId = avulsoProd.id;
+    }
+
     // 1. Create Sale
     const sale = await tx.sale.create({
       data: {
@@ -90,7 +102,7 @@ export async function checkoutSale(data: {
         cashRegisterId: openRegister.id,
         items: {
           create: data.items.map(item => ({
-            productId: item.productId,
+            productId: item.productId === "AVULSO" && avulsoProductId ? avulsoProductId : item.productId,
             quantity: item.quantity,
             price: item.price,
             total: item.total
