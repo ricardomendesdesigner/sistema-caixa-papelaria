@@ -40,8 +40,8 @@ export async function saveProduct(data: {
   
   let finalBarcode = productData.barcode;
   if (!finalBarcode || finalBarcode.trim() === "") {
-    // Generate an internal barcode if none is provided
-    finalBarcode = `INT${Date.now().toString().slice(-8)}`;
+    // Generate a unique internal barcode
+    finalBarcode = `INT${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
   } else {
     finalBarcode = finalBarcode.trim();
   }

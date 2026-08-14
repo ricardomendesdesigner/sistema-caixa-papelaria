@@ -91,8 +91,8 @@ export default function Produtos() {
         id: formData.id ? formData.id : undefined,
         name: formData.name,
         barcode: formData.barcode,
-        price: Number(formData.price) || 0,
-        cost: Number(formData.cost) || 0,
+        price: Number(formData.price.toString().replace(',', '.')) || 0,
+        cost: Number(formData.cost.toString().replace(',', '.')) || 0,
         stock: Number(formData.stock) || 0,
         categoryId: formData.categoryId || null,
         imageUrl: formData.imageUrl || null
@@ -100,9 +100,9 @@ export default function Produtos() {
       setIsModalOpen(false);
       setFormData(initialForm);
       loadData(search);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Erro ao salvar produto. Verifique se o código de barras já existe.");
+      alert(`Erro ao salvar produto: ${error.message || 'Verifique se o código de barras já existe.'}`);
     } finally {
       setIsProcessing(false);
     }
