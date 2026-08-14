@@ -85,8 +85,9 @@ export default function PDV() {
         case 'F4': {
           let val = prompt('Digite o valor do desconto (R$):', discount.toString());
           if (val) {
-            val = val.replace(',', '.');
-            if (!isNaN(Number(val))) setDiscount(Number(val));
+            val = val.replace(',', '.').replace(/[^0-9.-]+/g, "");
+            const parsed = parseFloat(val);
+            if (!isNaN(parsed)) setDiscount(parsed);
           }
           break;
         }
@@ -444,8 +445,9 @@ export default function PDV() {
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={() => {
               let val = prompt('Digite o valor do desconto (R$):', discount.toString());
               if (val) {
-                val = val.replace(',', '.');
-                if (!isNaN(Number(val))) setDiscount(Number(val));
+                val = val.replace(',', '.').replace(/[^0-9.-]+/g, "");
+                const parsed = parseFloat(val);
+                if (!isNaN(parsed)) setDiscount(parsed);
               }
             }}>F4 - Desconto</button>
             <button className="btn btn-secondary" style={{ padding: '1rem' }} onClick={() => {
