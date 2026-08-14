@@ -87,12 +87,12 @@ export default function CaixaPage() {
 
   // Cálculos do Caixa Aberto
   const calcTotals = () => {
-    if (!caixa) return { totalVendas: 0, totalSangria: 0, totalSuprimento: 0, saldoEsperado: 0 };
+    if (!caixa) return { totalVendas: 0, totalPix: 0, totalCartao: 0, totalPrazo: 0, totalSangria: 0, totalSuprimento: 0, saldoEsperado: 0 };
     
-    // Somar apenas vendas em dinheiro (CASH) para o saldo do caixa
-    const totalVendas = caixa.sales
-      .filter((s: any) => s.paymentMethod === "CASH")
-      .reduce((acc: number, s: any) => acc + s.total, 0);
+    const totalVendas = caixa.sales.filter((s: any) => s.paymentMethod === "CASH").reduce((acc: number, s: any) => acc + s.total, 0);
+    const totalPix = caixa.sales.filter((s: any) => s.paymentMethod === "PIX").reduce((acc: number, s: any) => acc + s.total, 0);
+    const totalCartao = caixa.sales.filter((s: any) => ["CREDIT_CARD", "DEBIT_CARD"].includes(s.paymentMethod)).reduce((acc: number, s: any) => acc + s.total, 0);
+    const totalPrazo = caixa.sales.filter((s: any) => s.paymentMethod === "A_PRAZO").reduce((acc: number, s: any) => acc + s.total, 0);
 
     const totalSangria = caixa.movements
       .filter((m: any) => m.type === "SANGRIA")
@@ -104,10 +104,10 @@ export default function CaixaPage() {
 
     const saldoEsperado = caixa.openingBalance + totalVendas + totalSuprimento - totalSangria;
 
-    return { totalVendas, totalSangria, totalSuprimento, saldoEsperado };
+    return { totalVendas, totalPix, totalCartao, totalPrazo, totalSangria, totalSuprimento, saldoEsperado };
   };
 
-  const { totalVendas, totalSangria, totalSuprimento, saldoEsperado } = calcTotals();
+  const { totalVendas, totalPix, totalCartao, totalPrazo, totalSangria, totalSuprimento, saldoEsperado } = calcTotals();
 
   const imprimirMovimento = async () => {
     if (!caixa) return;
@@ -148,6 +148,10 @@ export default function CaixaPage() {
     yPos += 7;
     doc.text(`Total em Vendas (Dinheiro): R$ ${totalVendas.toFixed(2)}`, 15, yPos);
     yPos += 7;
+    doc.text(`Total em Vendas (PIX): R$ ${totalPix.toFixed(2)}`, 15, yPos);
+    yPos += 7;
+    doc.text(`Total em Vendas (Cartão): R$ ${totalCartao.toFixed(2)}`, 15, yPos);
+    yPos += 7;
     doc.text(`Total Suprimentos: R$ ${totalSuprimento.toFixed(2)}`, 15, yPos);
     yPos += 7;
     doc.text(`Total Sangrias: R$ ${totalSangria.toFixed(2)}`, 15, yPos);
@@ -159,10 +163,10 @@ export default function CaixaPage() {
 
     const flow: any[] = [];
     
-    caixa.sales.filter((s: any) => s.paymentMethod === "CASH").forEach((s: any) => {
+    caixa.sales.forEach((s: any) => {
       flow.push({
         date: new Date(s.createdAt),
-        type: 'VENDA',
+        type: `VENDA (${s.paymentMethod === 'CASH' ? 'DINHEIRO' : s.paymentMethod === 'PIX' ? 'PIX' : s.paymentMethod === 'A_PRAZO' ? 'PRAZO' : 'CARTÃO'})`,
         desc: `Venda #${s.id.slice(-6).toUpperCase()}`,
         amount: s.total
       });
@@ -225,27 +229,45 @@ export default function CaixaPage() {
           <button className="btn btn-primary" onClick={() => setShowOpenModal(true)}>Abrir Caixa Agora</button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-            <div className="glass-panel" style={{ padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Fundo de Caixa</p>
-              <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)' }}>R$ {caixa.openingBalance.toFixed(2)}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h3 style={{ marginTop: '0.5rem', marginBottom: '-0.5rem', color: 'var(--text-secondary)' }}>Resumo Geral das Vendas</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+              <div className="glass-panel" style={{ padding: '1rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Vendas (Dinheiro)</p>
+                <h3 style={{ color: 'var(--success-color)' }}>R$ {totalVendas.toFixed(2)}</h3>
+              </div>
+              <div className="glass-panel" style={{ padding: '1rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Vendas (PIX)</p>
+                <h3 style={{ color: '#00BFA5' }}>R$ {totalPix.toFixed(2)}</h3>
+              </div>
+              <div className="glass-panel" style={{ padding: '1rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Vendas (Cartões)</p>
+                <h3 style={{ color: '#F57C00' }}>R$ {totalCartao.toFixed(2)}</h3>
+              </div>
+              <div className="glass-panel" style={{ padding: '1rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Vendas (A Prazo)</p>
+                <h3 style={{ color: 'var(--text-primary)' }}>R$ {totalPrazo.toFixed(2)}</h3>
+              </div>
             </div>
-            <div className="glass-panel" style={{ padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Vendas (Dinheiro)</p>
-              <h2 style={{ fontSize: '1.5rem', color: 'var(--success-color)' }}>+ R$ {totalVendas.toFixed(2)}</h2>
-            </div>
-            <div className="glass-panel" style={{ padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Suprimentos</p>
-              <h2 style={{ fontSize: '1.5rem', color: 'var(--success-color)' }}>+ R$ {totalSuprimento.toFixed(2)}</h2>
-            </div>
-            <div className="glass-panel" style={{ padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Sangrias</p>
-              <h2 style={{ fontSize: '1.5rem', color: 'var(--danger-color)' }}>- R$ {totalSangria.toFixed(2)}</h2>
-            </div>
-            <div className="glass-panel" style={{ padding: '1.5rem', background: 'var(--primary-color)', color: 'white' }}>
-              <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>Saldo em Dinheiro</p>
-              <h2 style={{ fontSize: '2rem' }}>R$ {saldoEsperado.toFixed(2)}</h2>
+
+            <h3 style={{ marginTop: '1rem', marginBottom: '-0.5rem', color: 'var(--text-secondary)' }}>Movimento de Dinheiro no Caixa</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Fundo Inicial</p>
+                <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)' }}>R$ {caixa.openingBalance.toFixed(2)}</h2>
+              </div>
+              <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Suprimentos (+)</p>
+                <h2 style={{ fontSize: '1.5rem', color: 'var(--success-color)' }}>R$ {totalSuprimento.toFixed(2)}</h2>
+              </div>
+              <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Sangrias (-)</p>
+                <h2 style={{ fontSize: '1.5rem', color: 'var(--danger-color)' }}>R$ {totalSangria.toFixed(2)}</h2>
+              </div>
+              <div className="glass-panel" style={{ padding: '1.5rem', background: 'var(--primary-color)', color: 'white' }}>
+                <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>Saldo em Dinheiro</p>
+                <h2 style={{ fontSize: '2rem' }}>R$ {saldoEsperado.toFixed(2)}</h2>
+              </div>
             </div>
           </div>
 
